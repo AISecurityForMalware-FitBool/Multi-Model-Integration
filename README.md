@@ -1,4 +1,4 @@
-# Malware Detection with Multi-Model Integration (AWS Lambda)
+# Malware Detection with Multi-Model Integration
 
 ## 프로젝트 개요
 이 프로젝트는 **세 가지 AI 기반 악성코드 탐지 모델**을 통합하여,  
@@ -12,6 +12,7 @@ AWS Lambda 환경에서 실행 가능한 악성코드 탐지 시스템을 구현
 ---
 
 ## 📂 프로젝트 구조
+```text
 Multi-Model Integration/
 ├── models/ # 모델 및 피처 산출물
 │   ├── pe/
@@ -47,3 +48,4 @@ Multi-Model Integration/
 │
 ├── README.md
 └── .gitignore
+```
