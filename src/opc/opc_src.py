@@ -29,15 +29,15 @@ TARGET_TRIGRAMS_TO_TRACK = [
     'jmp mov mov', 'call mov mov', 'push push push', 'pop pop pop', 
     'mov test jz', 'lea mov call', 'lea call mov', 'lea mov mov',
     
-    # --- 악성 특화 피처 (14개, "retn sub sub" 제외) ---
+    # --- 악성 특화 피처 (15개, "retn sub sub" 제외) ---
     'mov push call', 'mov imul mov', 'mov push mov', 'push call add', 
     'push push call', 'mov mov push', 'push push mov', 'imul mov mov', 
     'mov push push', 'mov mov imul', 'mov mul mov', 'push mov push', 
     'push mov call', 'push call mov','push mov mov',
     
-    # --- 정상 특화 피처 (13개, "pop ret mov"와 "pop pop ret" 제외) ---
+    # --- 정상 특화 피처 (14개, "pop ret mov"와 "pop pop ret" 제외) ---
     'test jnz mov', 'mov cmp jz', 'mov call test', 'mov xor mov', 
-    'jmp mov mov', 'call lea mov', 'push sub mov', 'pop ret mov', 
+    'jmp mov mov', 'call lea mov', 'push sub mov', 
     'lea mov lea', 'sub mov mov', 'mov add pop', 'jnz mov mov', 
     'xor mov mov', 'call test jz', 'cmp jz mov'
 ]
