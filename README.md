@@ -353,7 +353,7 @@ Multi-Model Integration/
 
 ---
 ### 참고 사항
-* **[KISIA의 AI보안 악성코드반]** fit bool의 프로젝트입니다.
-* 각 모델별 Feature List와 Requirements는 feature_list/, requirements/ 폴더 내 존재합니다.
+* **[KISIA의 AI보안 악성코드반]** 팀 fit bool의 프로젝트입니다.
+* 각 모델별 Feature List와 Requirements는 models/, requirements/ 폴더 내 존재합니다.
 * 예시 결과는 테스트용으로 생성된 샘플이며, 실제 환경에서는 로그 저장 및 S3 업로드와 연동 가능합니다.
 
