@@ -6,7 +6,7 @@
 
 ### 📋 목차 (Table of Contents)
 1.  [**프로젝트 개요**](#프로젝트-개요)
-2.  [**개별 분석 모델 테스트 가이드**](#개별-분석-모델-테스트-가이드)
+2.  [**개별 분석 모델 테스트 가이드**](#-개별-분석-모델-테스트-가이드)
     - [PE 구조 분석](#1-pe-구조-분석-static-analysis)
     - [이미지 분석](#2-이미지-분석-img-analysis)
     - [Opcode 분석](#3-opcode-분석-opcode-analysis)
@@ -15,7 +15,7 @@
 5.  [**기술 스택 및 도구**](#-기술-스택-및-도구)
 6.  [**개발 기간**](#️-개발-기간)
 7.  [**팀원 및 역할**](#-팀원-및-역할)
-8.  [**참고 사항**](#-참고-사항)
+8.  [**참고 사항**](#참고-사항)
 
 ---
 
@@ -25,13 +25,20 @@
 ## 프로젝트 개요
 PE 구조, 이미지, Opcode를 분석하는 3개의 AI 모델과 모델 앙상블을하여 탐지 정확도를 극대화하고, AWS Lambda 환경에서 동작하는 악성코드 탐지 시스템입니다.
 
-### 핵심 아키텍처 : AWS Lambda 기반 모델 앙상블
+<br>
 
-<그림>
+### ⚙️핵심 아키텍처 : AWS Lambda 기반 모델 앙상블
 
-이 프로젝트의 핵심은 개별 모델의 예측 결과를 AWS Lambda 환경에서 실시간으로 융합하는 것입니다. 사용자가 파일을 업로드하면, Lambda 함수가 트리거되어 3개의 분석 모델을 동시에 호출하고, 각 모델이 반환한 악성 확률(Probability)을 **가중 평균(Weighted Average)**하여 최종 탐지 결과를 내립니다.
+<p align="center">
+  <img src="Images/aws_architecture.png" alt="aws_architecture" width="800">
+</p>
 
-#### 모델 융합 방식: Soft Voting
+이 프로젝트의 핵심은 개별 모델의 예측 결과를 AWS Lambda 환경에서 실시간으로 융합하는 것입니다. 사용자가 파일을 업로드하면, Lambda 함수가 트리거되어 3개의 분석 모델을 동시에 호출하고, 각 모델이 반환한 악성 확률(Probability)을 앙상블하여 최종 탐지 결과를 내립니다.
+
+<br>
+<br>
+
+#### 🧩모델 융합 방식: Soft Voting
 3개의 단일 모델(PE, IMG, OPCODE)이 예측한 개별 확률 값을 **Optuna로 최적화된 가중치를 적용하여 Soft Voting** 방식으로 합산합니다. 이 가중 평균(Weighted Average)을 통해 단일 모델의 약점을 상호 보완하고 전체 탐지 정확도를 극대화합니다.
 * **PE 특징 분석 모델 (XGBoost)**: 파일의 구조적 비정상성을 탐지합니다.
 
@@ -45,8 +52,9 @@ PE 구조, 이미지, Opcode를 분석하는 3개의 AI 모델과 모델 앙상�
 
 ---
 
-## 개별 분석 모델 테스트 가이드
-각 모델의 독립적인 실행 방법 및 세부 정보는 아래 토글 메뉴를 통해 확인할 수 있습니다.
+## 🧪 개별 분석 모델 테스트 가이드
+- 각 모델의 독립적인 실행 방법 및 세부 정보는 아래 테스트 가이드를 통해 확인할 수 있습니다.
+<br>
 
 ### 1. PE 구조 분석 (Static Analysis)
 - PE 파일 정적 분석 기반 악성코드 탐지 파이프라인입니다.
@@ -59,13 +67,13 @@ python3 -m venv .venv
 source .venv/bin/activate    # Windows: .venv\Scripts\activate
 
 # 필요 라이브러리 설치
-pip install -r requirements.txt
+pip install -r requirements/pe_requirements.txt
 ```
 
 ### 실행 방법
 ```bash
-# handler.py 속 PE_PATH를 수정 후 실행
-python src/handler.py
+# src/pe/handler.py 파일 속 PE_PATH를 분석할 파일 경로로 수정 후 실행합니다.
+python src/pe/handler.py
 ```
 
 ### 예측 결과 예시
@@ -91,19 +99,24 @@ python src/handler.py
 }
 ```
 ---
-## 2. 이미지 분석 (IMG Analysis)
+### 2. 이미지 분석 (IMG Analysis)
 - **EfficientNetV2-S** 기반 이미지 분석 파이프라인입니다.
 - PE 파일을 **GrayScale 이미지로 변환**하여 CNN 모델로 악성 여부를 판별합니다.
 
 ### 실행 환경 준비
 ```bash
-pip install tensorflow opencv-python numpy
+# (선택) 가상환경 생성 및 활성화
+python3 -m venv .venv
+source .venv/bin/activate    # Windows: .venv\Scripts\activate
+
+# 필요 라이브러리 설치
+pip install -r requirements/img_requirements.txt
 ```
 
 ### 실행 방법
 ```bash
-# handler.py 속 PE_PATH 수정 후 실행
-python src/handler.py
+# src/img/img_src.py 스크립트에 분석할 PE 파일 경로를 인자로 전달하여 실행합니다.
+python src/img/img_src.py "path/to/your/sample.exe"
 
 # 또는 단일 실행
 python inference_workflow.py
@@ -118,7 +131,7 @@ python inference_workflow.py
 #### 결과 저장 위치
 `./PE_Inference_Assets/inference_results/`
 
-### 🧾 예측 결과 예시
+### 예측 결과 예시
 ```json
 {
     "input_path": "/content/0b3731c524e6ba716f15087d85eae7e6225b6b51d4ae2fa6c142ff1523f57046.exe",
@@ -152,28 +165,25 @@ PE 파일명: sample.exe
 ```
 ---
 
-## 3. Opcode 분석 (Opcode Analysis)
+### 3. Opcode 분석 (Opcode Analysis)
 
 ### 실행 환경 준비
 ```bash
-# 1. 저장소 복제
-git clone https://github.com/poatan2/opcode-classifier.git
-cd opcode-classifier
-
-# 2. (선택) 가상 환경 생성 및 활성화
+# (선택) 가상 환경 생성 및 활성화
 python -m venv venv
-source venv/bin/activate   # macOS/Linux
-venv\Scripts\activate      # Windows
+source venv/bin/activate  # macOS/Linux
+venv\Scripts\activate     # Windows
 
-# 3. 필요 라이브러리 설치
-pip install -r requirements.txt
+# 필요 라이브러리 설치
+pip install -r requirements/opc_requirements.txt
 ```
 
 ### 예측 스크립트 실행
 `model/` 폴더에 저장된 모델을 사용하여 새로운 ASM 파일을 분석합니다.
 
 ```bash
-python src/predict.py "path/to/your/sample.asm"
+# opc_src.py 스크립트에 분석할 ASM 파일 경로를 인자로 전달하여 실행합니다.
+python src/opcode/opc_src.py "path/to/your/sample.asm"
 ```
 
 ### 예측 결과 예시
@@ -224,12 +234,39 @@ python src/predict.py "path/to/your/sample.asm"
 ```
 ---
 ## 모델 앙상블 (Soft Voting)
-3가지 단일 모델(PE, IMG, OPCODE)의 예측 결과를 **Optuna로 최적화된 가중치**를 사용하여 **Soft Voting** 방식으로 최종 판단합니다. 
-각 모델이 예측한 악성일 확률(Probability)에 고유한 가중치를 곱하여 합산함으로써, 단일 모델이 놓칠 수 있는 다양한 형태의 악성코드를 효과적으로 탐지합니다.
+- 3가지 단일 모델(PE, IMG, OPCODE)의 예측 결과를 Optuna로 최적화된 가중치를 사용하여 **Soft Voting** 방식으로 최종 판단합니다.
+### 실행 방법
+```bash
+python predict_combined.py
+```
 
-* **최종 판단 로직**: `(PE 확률 * 가중치1) + (IMG 확률 * 가중치2) + (Opcode 확률 * 가중치3)`
-* **핵심 역할**: 개별 모델의 예측을 종합하여 오탐을 줄이고 탐지 신뢰도를 향상시킵니다.
-* **구현 환경**: 모든 앙상블 로직은 **AWS Lambda** 상에서 동작하여 서버리스 환경의 이점을 최대로 활용합니다.  
+### 입력 요청 예시
+* 3입력(pe+img+opc) 모델 사용시
+```
+=== 🔍 확률 결합 예측기 ===
+입력 예시:
+ - 3입력: pe, img, opc 순서로 입력
+ - 2입력: pe, {img 또는 opc} 입력 후 mode로 'img' 또는 'opc' 선택
+
+입력할 확률 개수 (2 또는 3): 3
+PE 확률 (0~1): 0.95
+IMG 확률 (0~1): 0.98
+OPC 확률 (0~1): 0.97
+
+```
+
+* 2입력(pe+{img or opc}) 모델 사용시
+```
+입력할 확률 개수 (2 또는 3): 2
+PE 확률 (0~1): 0.95
+두 번째 확률 (IMG 또는 OPC) (0~1): 0.90
+mode 선택 ('img' 또는 'opc'): img
+```
+
+### 출력 로그 예시
+```bash
+예측 결과: 93.45% → 악성
+```
 
 
 ---
@@ -264,6 +301,7 @@ Multi-Model Integration/
 │
 ├── requirements/
 │   ├─ pe_requirements.txt
+│   ├─ img.requirements.txt 
 │   ├─ opc_requirements.txt
 │   └─ softVoting_requirements.txt
 │
@@ -286,34 +324,34 @@ Multi-Model Integration/
 ![HTML](https://img.shields.io/badge/HTML-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) ![CSS](https://img.shields.io/badge/CSS-1572B6?style=for-the-badge&logo=css3&logoColor=white)
 
 ### 🖥 Backend
-![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white) ![AWS Lambda](https://img.shields.io/badge/AWS%20Lambda-FF9900?style=for-the-badge&logo=aws-lambda&logoColor=white) ![Amazon S3](https://img.shields.io/badge/Amazon%20S3-569A31?style=for-the-badge&logo=amazon-s3&logoColor=white)
 
 ### 🗣 Communication
-![Notion](https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white) ![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
+![Notion](https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white) ![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white) ![Google Meet](https://img.shields.io/badge/Google%20Meet-00897B?style=for-the-badge&logo=googlemeet&logoColor=white)
 
 
 
 ---
 
 ##  🗓️ 개발 기간
-* **전체 기간** : 2025년 8월 1일 ~ 2025년 10월 15일 (수정 필요)  
-  * **1. 자료 및 데이터 셋 수집** : 날짜 or 몇주 
-  * **2. 모델 개발** : 날짜 or 몇주
-  * **3. 소프트 보팅 및  aws 시스템 구성** : 날짜 or 몇주
+* **전체 기간** : 2025년 7월 28일 ~ 2025년 10월 17일 
+  * **1. 기획 및 데이터 셋 수집** : 7주
+  * **2. 모델 개발** : 8주
+  * **3. 소프트 보팅 및  aws 시스템 구성** : 7주
 
 ---
 ## 👥 팀원 및 역할 
 |이름|역할|GitHub|
 |:------|:---|:----|
-|**김서현**|팀장 / SoftVoting|</span>[deEdenKim](https://github.com/deEdenKim)
+|**김서현**|팀장 / SoftVoting|[deEdenKim](https://github.com/deEdenKim)
 |**강민성**|IMG 분석|[K_Nerd](https://github.com/K-Nerd)
 |**김민수**|PE구조 분석|[Minsu00326](https://github.com/Minsu00326)
 |**이도협**|AWS 구성|[LeeDoHyup](https://github.com/LeeDoHyup)
 |**홍태경**|Opcode 분석|[poatan2](https://github.com/poatan2)
+<br>
 
 ---
-
-## 참고 사항
-* KISIA의 AI보안 악성코드반 fit bool의 프로젝트입니다.
+### 참고 사항
+* **[KISIA의 AI보안 악성코드반]** fit bool의 프로젝트입니다.
 * 각 모델별 Feature List와 Requirements는 feature_list/, requirements/ 폴더 내 존재합니다.
 * 예시 결과는 테스트용으로 생성된 샘플이며, 실제 환경에서는 로그 저장 및 S3 업로드와 연동 가능합니다.
