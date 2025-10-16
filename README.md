@@ -1,62 +1,36 @@
 # Malware Detection with Multi-Model Integration
-## 프로젝트 설명
-이 프로젝트는 **세 가지 AI 기반 악성코드 탐지 모델**을 통합하여,  
-**AWS Lambda 환경에서 실행 가능한 악성코드 탐지 시스템**을 구현한 결과물입니다.
+<br>
+<p align="center">
+  <img src="Images/webLogo_black.png" alt="Web Logo" width="200">
+</p>
 
-- **PE 기반 탐지 (XGBoost)** : PE 파일에서 39개 피처를 추출하여 분류  
-- **이미지 기반 탐지 (CNN)** : 실행 파일을 이미지로 변환 후 악성/정상 분류  
-- **Opcode 기반 탐지 (XGBoost)** : 어셈블리 명령어 시퀀스를 기반으로 탐지  
-- **SoftVoting** : Optuna 기반 파라미터 최적화 및 3가지 단일 모델의 가중합 결과 산출  
+## 프로젝트 개요
+PE 구조, 이미지, Opcode를 분석하는 3개의 AI 모델과 모델 앙상블을하여 탐지 정확도를 극대화하고, AWS Lambda 환경에서 동작하는 악성코드 탐지 시스템입니다.
 
----
+### 핵심 아키텍처 : AWS Lambda 기반 모델 앙상블
 
-## 디렉토리 구조
-```plaintext
-Multi-Model Integration/
-├── models/
-│   ├── pe/
-│   │   ├── pe_model.pkl 
-│   │   └── features.txt 
-│   ├── img/
-│   │   └── img_model.keras
-│   └── opcode/
-│       ├── opc_model.joblib
-│       └── features.txt 
-│
-├── src/
-│   ├── softVoting/
-│   │   └── softVoting.py
-│   ├── pe/
-│   │   ├── extract_fetures.py 
-│   │   └── handler.py
-│   ├── img/
-│   │   └── img_src.py 
-│   └── opcode/
-│       └── opc_src.py
-│
-├── rules/
-│   └── pe/
-│       └── packer.yar
-│
-├── requirements/
-│   ├── pe/
-│   │   └── pe_requirements.txt
-│   └── opc/
-│       └── opc_requirements.txt
-│
-├── feature_list/
-│   ├── pe/
-│   │   └── pe_feature_list.txt
-│   └── opc/
-│       └── opc_feature_list.txt
-│
-├── README.md
-└── .gitignore
-````
+<그림>
+
+이 프로젝트의 핵심은 개별 모델의 예측 결과를 AWS Lambda 환경에서 실시간으로 융합하는 것입니다. 사용자가 파일을 업로드하면, Lambda 함수가 트리거되어 3개의 분석 모델을 동시에 호출하고, 각 모델이 반환한 악성 확률(Probability)을 **가중 평균(Weighted Average)**하여 최종 탐지 결과를 내립니다.
+
+#### 모델 융합 방식: Soft Voting
+3개의 단일 모델(PE, IMG, OPCODE)이 예측한 개별 확률 값을 **Optuna로 최적화된 가중치를 적용하여 Soft Voting** 방식으로 합산합니다. 이 가중 평균(Weighted Average)을 통해 단일 모델의 약점을 상호 보완하고 전체 탐지 정확도를 극대화합니다.
+* **PE 특징 분석 모델 (XGBoost)**: 파일의 구조적 비정상성을 탐지합니다.
+
+* **바이너리 시각화 모델 (CNN)**: 바이너리의 시각적 패턴을 분석합니다.
+
+* **Opcode 시퀀스 모델 (LightGBM)**: 명령어 순서를 기반으로 파일의 행위를 예측합니다.  
+
+<br>  
+
+**※ 중요**: 모델 융합 및 최종 판단 로직은 AWS Lambda에 구현되어 있으므로 로컬에서 통합 실행은 지원하지 않습니다. 로컬 환경에서는 아래 가이드를 통해 각 분석 모듈의 성능을 개별적으로 테스트할 수 있습니다.
 
 ---
 
-## 1. Malware Detection - Static Analysis
+## 개별 분석 모델 테스트 가이드
+각 모델의 독립적인 실행 방법 및 세부 정보는 아래 토글 메뉴를 통해 확인할 수 있습니다.
+
+### 1. PE 구조 분석 (Static Analysis)
 - PE 파일 정적 분석 기반 악성코드 탐지 파이프라인입니다.
 - PE 헤더, Import API, 문자열 통계, YARA 패커 탐지 피처를 추출하여 학습된 **XGBoost 모델**을 통해 악성/정상 여부를 분류합니다.
 
@@ -98,10 +72,8 @@ python src/handler.py
   }
 }
 ```
-
 ---
-
-## 2. Malware Detection - IMG Analysis
+## 2. 이미지 분석 (IMG Analysis)
 - **EfficientNetV2-S** 기반 이미지 분석 파이프라인입니다.
 - PE 파일을 **GrayScale 이미지로 변환**하여 CNN 모델로 악성 여부를 판별합니다.
 
@@ -143,7 +115,6 @@ python inference_workflow.py
     }
 }
 ```
-
 ### 출력 로그 예시
 ```bash
 🚀 PE 파일 분석 시작: ./sample.exe
@@ -161,10 +132,9 @@ PE 파일명: sample.exe
 
 ✅ JSON 결과 저장 완료: ./PE_Inference_Assets/inference_results/sample_exe_image_result.json
 ```
-
 ---
 
-## 3. Malware Detection - Opcode Analysis
+## 3. Opcode 분석 (Opcode Analysis)
 
 ### 실행 환경 준비
 ```bash
@@ -236,14 +206,86 @@ python src/predict.py "path/to/your/sample.asm"
 ```
 
 ---
+## 📂 프로젝트 구조
+```text
+Multi-Model Integration/
+├── models/
+│   ├── pe/
+│   │   ├── pe_model.pkl 
+│   │   └── pe_feature_list.txt 
+│   ├── img/
+│   │   └── img_model.keras
+│   └── opcode/
+│       ├── opc_model.joblib
+│       └── opc_feature_list.txt 
+│
+├── src/
+│   ├── softVoting/
+│   │   └── softVoting.py
+│   ├── pe/
+│   │   ├── extract_fetures.py 
+│   │   └── handler.py
+│   ├── img/
+│   │   └── img_src.py 
+│   └── opcode/
+│       └── opc_src.py
+│
+├── rules/
+│   └── pe/
+│       └── packer.yar
+│
+├── requirements/
+│   ├─ pe_requirements.txt
+│   ├─ opc_requirements.txt
+│   └─ softVoting_requirements.txt
+│
+├── README.md
+├─  Images
+└── .gitignore
+```
+---
 
-## 4. SoftVoting (앙상블)
-- 3가지 단일 모델(PE, IMG, OPCODE)의 예측 결과를 Optuna로 최적화된 가중치를 사용하여 **Soft Voting** 방식으로 최종 판단합니다.
+
+## 🛠 기술 스택 및 도구
+
+### 💻 Environment
+![Google Colab](https://img.shields.io/badge/GoogleColab-F9AB00?style=for-the-badge&logo=googlecolab&logoColor=white) ![Jupyter](https://img.shields.io/badge/Jupyter-F37626?style=for-the-badge&logo=jupyter&logoColor=white)
+
+### 🤖 AI Development
+![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white) ![Scikit-learn](https://img.shields.io/badge/Scikit--Learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white) ![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
+
+### 🌐 Frontend
+![HTML](https://img.shields.io/badge/HTML-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black) ![CSS](https://img.shields.io/badge/CSS-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+
+### 🖥 Backend
+![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white)
+
+### 🗣 Communication
+![Notion](https://img.shields.io/badge/Notion-000000?style=for-the-badge&logo=notion&logoColor=white) ![Discord](https://img.shields.io/badge/Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white)
+
+
 
 ---
 
-## * 참고 사항
-* KISIA의 AI보안 악성코드반 fit bool의 프로젝트입니다.
-* 각 모델별 Feature List와 Requirements는 `feature_list/`, `requirements/` 폴더 내 존재합니다.
-* 예시 결과는 테스트용으로 생성된 샘플이며, 실제 환경에서는 로그 저장 및 S3 업로드와 연동 가능합니다.
+##  🗓️ 개발 기간
+* **전체 기간** : 2025년 8월 1일 ~ 2025년 10월 15일 (수정 필요)  
+  * **1. 자료 및 데이터 셋 수집** : 날짜 or 몇주 
+  * **2. 모델 개발** : 날짜 or 몇주
+  * **3. 소프트 보팅 및  aws 시스템 구성** : 날짜 or 몇주
 
+---
+## 👥 팀원 및 역할 
+|이름|역할|GitHub|
+|:------|:---|:----|
+|**김서현**|팀장 / SoftVoting|</span>[deEdenKim](https://github.com/deEdenKim)
+|**강민성**|IMG 분석|[K_Nerd](https://github.com/K-Nerd)
+|**김민수**|PE구조 분석|[Minsu00326](https://github.com/Minsu00326)
+|**이도협**|AWS 구성|[LeeDoHyup](https://github.com/LeeDoHyup)
+|**홍태경**|Opcode 분석|[poatan2](https://github.com/poatan2)
+
+---
+
+## 참고 사항
+* KISIA의 AI보안 악성코드반 fit bool의 프로젝트입니다.
+* 각 모델별 Feature List와 Requirements는 feature_list/, requirements/ 폴더 내 존재합니다.
+* 예시 결과는 테스트용으로 생성된 샘플이며, 실제 환경에서는 로그 저장 및 S3 업로드와 연동 가능합니다.
