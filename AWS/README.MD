@@ -18,7 +18,7 @@ Lambda, S3, ECS, SQS, Bedrock API 등을 통합하여
 대규모 병렬 AI 분석 환경을 구현합니다.
 
 ---
-##Architecture
+## Architecture
 ![alt text](image-3.png)
 ![alt text](image.png)
 ![alt text](image-1.png)
@@ -26,54 +26,60 @@ Lambda, S3, ECS, SQS, Bedrock API 등을 통합하여
 ---
 
 ## Architecture Flow
+```text
 [Web Upload (fit-bool-web)]
-↓
+      ↓
 [S3: fit-bool-p] — file upload trigger
-↓
+      ↓
 [Dispatcher Lambda]
-↓
+      ↓
 [SQS Queues: PE / IMG / OPC]
-↓
-[Model Lambdas (PE_Lambda, IMG_Lambda, OPC_Lambda)]
-↓
+      ↓
+[Model Lambdas: PE_Lambda, IMG_Lambda, OPC_Lambda]
+      ↓
 [ECS Fargate → Docker_AI_for_ECS Containers]
-↓
-[Optional: Docker_Ghidra_for_ECS (ASM Extraction)]
-↓
+      ↓
+(Optional) [Docker_Ghidra_for_ECS — ASM Extraction]
+      ↓
 [Final_Ensemble_Lambda] — integrate model results
-↓
+      ↓
 [Final_LLM_Lambda] — generate report via Bedrock Claude 3 Haiku
-↓
+      ↓
 [S3: AI_Result/Final_Report] — store final JSON + report
-↓
+      ↓
 [CloudFront + S3 Website] — visualize results
 
+```
 ---
 
 ## Directory Structure
+```text
+AWS/
 ├── Docker_AI_for_ECS/
-│ ├── PE/ # PE feature-based AI model container
-│ ├── IMG/ # Image-based CNN malware detector
-│ ├── OPC/ # Opcode sequence classifier
-│ └── README.md
+│   ├── PE/                      # PE feature-based AI model container
+│   ├── IMG/                     # Image-based CNN malware detector
+│   ├── OPC/                     # Opcode sequence classifier
+│   └── README.md
 │
 ├── Docker_Ghidra_for_ECS/
-│ ├── ghidra_11.4.2_PUBLIC/ # Headless Ghidra engine
-│ ├── scripts/ # automation / analysis scripts
-│ ├── Dockerfile # ECS container build config
-│ ├── lambda_function.py # Lambda entry for task invoke
-│ └── run_one.sh # Ghidra headless execution
+│   ├── ghidra_11.4.2_PUBLIC/    # Headless Ghidra engine
+│   ├── scripts/                 # Automation / analysis scripts
+│   ├── Dockerfile               # ECS container build config
+│   ├── lambda_function.py       # Lambda entry for task invoke
+│   └── run_one.sh               # Ghidra headless execution
 │
 ├── Lambda_Function/
-│ ├── Dispatcher_Lambda/ # S3 trigger → SQS routing
-│ ├── PE_Lambda/ IMG_Lambda/ OPC_Lambda/ # model analyzers
-│ ├── Final_Ensemble_Lambda/ # ensemble integration
-│ ├── Final_LLM_Lambda/ # Bedrock LLM summary report
-│ ├── Timeout_Lambda/ # timeout control logic
-│ └── URL_Lambda/ # API Gateway endpoint (index.mjs)
+│   ├── Dispatcher_Lambda/       # S3 trigger → SQS routing
+│   ├── PE_Lambda/               # PE model analyzer
+│   ├── IMG_Lambda/              # Image model analyzer
+│   ├── OPC_Lambda/              # Opcode model analyzer
+│   ├── Final_Ensemble_Lambda/   # Ensemble integration logic
+│   ├── Final_LLM_Lambda/        # Bedrock LLM summary report
+│   ├── Timeout_Lambda/          # Timeout control logic
+│   └── URL_Lambda/              # API Gateway endpoint (index.mjs)
 │
-└── README.md # (this file) overall overview
-
+└── README.md                    # (this file) overall overview
+```
 ---
 
 ## AWS Resource Map
