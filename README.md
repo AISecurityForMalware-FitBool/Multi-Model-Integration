@@ -274,7 +274,7 @@ mode 선택 ('img' 또는 'opc'): img
 
 ## 📂 프로젝트 구조
 ```text
-Multi-Model Integration/
+Multi-Model-Integration/
 ├── models/
 │   ├── pe/
 │   │   ├── pe_model.pkl 
@@ -289,7 +289,7 @@ Multi-Model Integration/
 │   ├── softVoting/
 │   │   └── softVoting.py
 │   ├── pe/
-│   │   ├── extract_fetures.py 
+│   │   ├── extract_features.py 
 │   │   └── handler.py
 │   ├── img/
 │   │   └── img_src.py 
@@ -301,13 +301,39 @@ Multi-Model Integration/
 │       └── packer.yar
 │
 ├── requirements/
-│   ├─ pe_requirements.txt
-│   ├─ img.requirements.txt 
-│   ├─ opc_requirements.txt
-│   └─ softVoting_requirements.txt
+│   ├── pe_requirements.txt
+│   ├── img_requirements.txt 
+│   ├── opc_requirements.txt
+│   └── softVoting_requirements.txt
 │
+├── AWS/
+│   ├── Docker_AI_for_ECR/
+│   │   ├── PE/                     # PE feature-based AI model container
+│   │   ├── IMG/                    # Image-based CNN malware detector
+│   │   ├── OPC/                    # Opcode sequence classifier
+│   │   └── README.md
+│   │
+│   ├── Docker_Ghidra_for_ECR/
+│   │   ├── ghidra_11.4.2_PUBLIC/   # Headless Ghidra engine
+│   │   ├── scripts/                # automation / analysis scripts
+│   │   ├── Dockerfile              # ECS container build config
+│   │   ├── lambda_function.py      # Lambda entry for ECS task invoke
+│   │   └── run_one.sh              # Ghidra headless execution
+│   │
+│   ├── Lambda_Function/
+│   │   ├── Dispatcher_Lambda/      # S3 trigger → SQS routing
+│   │   ├── PE_Lambda/              # PE model analyzer
+│   │   ├── IMG_Lambda/             # Image model analyzer
+│   │   ├── OPC_Lambda/             # Opcode model analyzer
+│   │   ├── Final_Ensemble_Lambda/  # Ensemble integration logic
+│   │   ├── Final_LLM_Lambda/       # Bedrock LLM summary report
+│   │   ├── Timeout_Lambda/         # Timeout control logic
+│   │   └── URL_Lambda/             # API Gateway endpoint (index.mjs)
+│   │
+│   └── README.md                   # Overview of AWS infrastructure
+│
+├── Images/
 ├── README.md
-├─  Images
 └── .gitignore
 ```
 ---
